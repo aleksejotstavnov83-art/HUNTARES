@@ -15,15 +15,15 @@
 namespace xim::mem {
 
 static const long PAGE = sysconf(_SC_PAGESIZE);
-static const long PAGE_MASK = ~(PAGE - 1);
+static const long HUNTARES_PAGE_MASK = ~(PAGE - 1);
 
 static bool check_perms(const void* addr, std::size_t size, char want) {
     if (!addr) return false;
     uintptr_t a = reinterpret_cast<uintptr_t>(addr);
     if (a + size < a) return false;
 
-    uintptr_t start = a & PAGE_MASK;
-    uintptr_t end   = (a + size + PAGE - 1) & PAGE_MASK;
+    uintptr_t start = a & HUNTARES_PAGE_MASK;
+    uintptr_t end   = (a + size + PAGE - 1) & HUNTARES_PAGE_MASK;
 
     FILE* f = fopen("/proc/self/maps", "r");
     if (!f) return false;
