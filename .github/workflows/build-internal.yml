@@ -1,0 +1,43 @@
+name: Build HUNTARES INTERNAL v3
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'native_internal/**'
+      - 'app/**'
+      - 'build.sh'
+      - '.github/workflows/build-internal.yml'
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK and NDK
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+            'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.2.12479018'
+      - name: Build module and launcher
+        env:
+          NDK_VERSION: 27.2.12479018
+        run: |
+          set -euo pipefail
+          export PATH="$ANDROID_HOME/build-tools/35.0.0:$PATH"
+          export NDK_BUILD="$ANDROID_HOME/ndk/$NDK_VERSION/ndk-build"
+          bash build.sh
+      - name: Upload build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HUNTARES-INTERNAL-v30-APK-AND-MODULE
+          path: |
+            build/HUNTARES_INTERNAL_v30.apk
+            build/HUNTARES_INTERNAL_v30_MODULE.zip
+          if-no-files-found: error

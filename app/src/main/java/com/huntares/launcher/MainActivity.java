@@ -66,64 +66,36 @@ public class MainActivity extends Activity {
     catch(Exception e){Toast.makeText(this,"Не удалось открыть Telegram",Toast.LENGTH_SHORT).show();}
   }
 
-  // Native HUNTARES CHEAT uses a SurfaceComposer overlay and needs root to read game memory.
-  // This launcher does not inject a .so into the game process.
-  private static final String BIN = "huntares-cheat-1.1.0";
-  private static final String DEST = "/data/local/tmp/huntares-cheat-1.1.0";
+
+  // The APK starts the game; Zygisk loads the actual internal module at app creation.
+  // Installing/rebooting the Zygisk module is an explicit separate user action.
   private volatile boolean launching = false;
 
   private void notice(String message) {
     runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
   }
 
-  private static String shq(String value) {
-    return "'" + value.replace("'", "'\"'\"'") + "'";
-  }
-
   private void launchGame() {
     if (launching) return;
-    Intent installed = getPackageManager().getLaunchIntentForPackage("com.axlebolt.standoff2");
-    if (installed == null) {
-      notice("Standoff 2 не найдена");
-      return;
-    }
+    Intent intent = getPackageManager().getLaunchIntentForPackage("com.axlebolt.standoff2");
+    if (intent == null) { notice("Standoff 2 не установлена"); return; }
     launching = true;
     new Thread(() -> {
       try {
-        File source = new File(getFilesDir(), BIN);
-        try (InputStream input = getAssets().open(BIN);
-             FileOutputStream output = new FileOutputStream(source)) {
-          byte[] chunk = new byte[16384];
-          int n;
-          while ((n = input.read(chunk)) >= 0) output.write(chunk, 0, n);
-        }
-        // KernelSU/Magisk will display their own root permission prompt.
-        Process root = new ProcessBuilder("su", "-c", "id -u").redirectErrorStream(true).start();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (InputStream in = root.getInputStream()) {
-          byte[] b = new byte[1024]; int n;
-          while ((n = in.read(b)) != -1 && out.size() < 4096) out.write(b, 0, n);
-        }
-        int status = root.waitFor();
-        if (status != 0 || !out.toString("UTF-8").trim().equals("0")) {
-          notice("Нужен root-доступ в KernelSU/Magisk");
+        Process p = new ProcessBuilder("su", "-c",
+          "test -f /data/adb/modules/huntares_internal/zygisk/arm64-v8a.so " +
+          "&& test ! -e /data/adb/modules/huntares_internal/disable").start();
+        int result = p.waitFor();
+        if (result != 0) {
+          notice("Сначала установи HUNTARES INTERNAL ZIP в KernelSU/Zygisk и перезагрузи телефон");
           return;
         }
-        String command = "cp " + shq(source.getAbsolutePath()) + " " + shq(DEST)
-            + " && chmod 0700 " + shq(DEST) + " && exec " + shq(DEST);
-        Process p = new ProcessBuilder("su", "-c", command).redirectErrorStream(true).start();
-        notice("HUNTARES CHEAT запускается. Открой Standoff 2, если игра не запустилась сама.");
-        try (BufferedReader logs = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-          String line;
-          while ((line = logs.readLine()) != null) Log.i("HUNTARES_CHEAT", line);
-        }
-        int exit = p.waitFor();
-        Log.i("HUNTARES_CHEAT", "HUNTARES CHEAT exited code=" + exit);
-        notice("HUNTARES CHEAT завершился, код: " + exit + ". Проверь Logcat.");
-      } catch (Exception err) {
-        Log.e("HUNTARES_CHEAT", "Unable to launch native program", err);
-        notice("Запуск не удался: " + err.getClass().getSimpleName());
+        notice("Модуль найден. Запускаю Standoff 2. Внутреннее меню зависит от Zygisk.");
+        runOnUiThread(() -> startActivity(intent));
+      } catch (Exception e) {
+        Log.e("HUNTARES_INTERNAL", "Cannot check installed module", e);
+        notice("Не удалось проверить модуль: " + e.getClass().getSimpleName());
       } finally { launching = false; }
-    }, "huntares-binary-loader").start();
+    }, "huntares-internal-loader").start();
   }
 }
