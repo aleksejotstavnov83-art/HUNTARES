@@ -37,6 +37,7 @@ using namespace std;
 using namespace std::chrono_literals;
 
 extern android::ANativeWindowCreator::DisplayInfo displayInfo;
+extern ANativeWindow* native_window;
 extern bool g_Initialized;
 extern ImGuiWindow *g_window;
 extern ImFont* fontBold;
