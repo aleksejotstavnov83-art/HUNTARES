@@ -1,0 +1,21 @@
+HUNTARES INJECTOR v3.4 — версия без каталога скинов
+
+Если архив лежит в Download:
+
+  pkg install git gh unzip -y
+  termux-setup-storage
+  mkdir -p ~/HUNTARES-INJECTOR-V34
+  unzip -oq ~/storage/downloads/HUNTARES_INJECTOR_v34_NO_SKINS_SOURCE.zip -d ~/HUNTARES-INJECTOR-V34
+  cd ~/HUNTARES-INJECTOR-V34
+  git init -b injector-v34
+  git add .
+  git commit -m "Remove nonfunctional skin catalog"
+  git remote add origin https://github.com/aleksejotstavnov83-art/HUNTARES.git
+  gh auth setup-git
+  git push -u origin injector-v34
+
+После push: GitHub Actions -> Build HUNTARES INJECTOR v3.4 APK.
+Скачай ZIP артефакт HUNTARES-INJECTOR-v34-APK и распакуй APK.
+
+ПРИМЕЧАНИЕ: Инжекция и Chams не проверены на устройстве.
+Нативный инжектор из чужого APK не проходил независимый аудит.
