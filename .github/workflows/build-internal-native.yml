@@ -1,0 +1,39 @@
+name: Build HUNTARES INTERNAL v3.2 Chams Menu (no APK)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'native_internal/**'
+      - 'build_native.sh'
+      - 'run_huntares.sh'
+      - '.github/workflows/build-internal-native.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Android NDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${ANDROID_HOME:?}"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'ndk;27.2.12479018'
+      - name: Native build
+        shell: bash
+        env:
+          NDK_VERSION: 27.2.12479018
+        run: |
+          export NDK_BUILD="$ANDROID_HOME/ndk/$NDK_VERSION/ndk-build"
+          test -x "$NDK_BUILD"
+          bash build_native.sh
+      - name: Upload module and loader script
+        uses: actions/upload-artifact@v4
+        with:
+          name: HUNTARES-INTERNAL-CHAMS-v32
+          path: |
+            build/libhuntares_internal.so
+            build/HUNTARES_INTERNAL_CHAMS_v32_MODULE.zip
+            build/run_huntares.sh
+          if-no-files-found: error
