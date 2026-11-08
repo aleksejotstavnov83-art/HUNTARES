@@ -1,0 +1,6 @@
+HUNTARES CHEAT v3.5
+- BaseMenu replaced with HUNTARES CHEAT native Android overlay
+- Old game ImGui menu removed; EGL drawing disabled
+- Skin changer / catalog removed
+- UI controls: touch, tabs, close X, scale, accent, watermark
+- Chams is NOT functional; absent validated game renderer integration

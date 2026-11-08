@@ -1,0 +1,43 @@
+name: Build HUNTARES INJECTOR v3.5 APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'app/**'
+      - 'native_internal/**'
+      - 'reference_injector/**'
+      - 'build.sh'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK / NDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+            'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.2.12479018'
+      - name: Build APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$ANDROID_HOME/build-tools/35.0.0:$PATH"
+          export ANDROID_JAR="$ANDROID_HOME/platforms/android-35/android.jar"
+          export NDK_BUILD="$ANDROID_HOME/ndk/27.2.12479018/ndk-build"
+          bash build.sh
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HUNTARES-INJECTOR-v35-APK
+          path: build/HUNTARES_INJECTOR_v35.apk
+          if-no-files-found: error
